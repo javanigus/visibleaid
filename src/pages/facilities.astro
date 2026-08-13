@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
 import facilities from '../data/facilities';
+import worldMap from '../assets/world-map.png';
 ---
 <Layout title="All facilities — VisibleAid" active="facilities">
 
@@ -14,7 +16,9 @@ import facilities from '../data/facilities';
 
 <section class="block">
 	<div class="wrap">
-		<div class="ph mapph"><span>world map with district-level pins — placeholder</span></div>
+		<div class="ph mapph">
+			<Image src={worldMap} alt="Map of the regions VisibleAid works in" class="mapph-img" widths={[640, 984, 1970]} sizes="(min-width: 1040px) 984px, 100vw" />
+		</div>
 
 		<table class="facilities">
 			<thead>

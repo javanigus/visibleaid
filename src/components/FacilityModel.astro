@@ -1,0 +1,276 @@
+---
+import { ROOM_LEGEND, ROOM_COLORS } from '../data/facilityModel';
+---
+<div class="facility-model">
+	<div class="facility-model-canvas-wrap">
+		<canvas
+			class="facility-model-canvas"
+			role="img"
+			aria-label="Interactive 3D model of a two-story shared housing facility, exploded to show both floors. Ground floor: restaurant open to the street, kitchen, 7 bedrooms, 3 bathrooms. Upper floor: 7 bedrooms, 2 bathrooms. Drag to rotate."
+		></canvas>
+		<p class="facility-model-hint">Drag to rotate</p>
+		<noscript><p class="facility-model-fallback">Interactive model requires JavaScript — see the room breakdown below.</p></noscript>
+	</div>
+	<ul class="facility-model-legend">
+		{ROOM_LEGEND.map((item) => (
+			<li><span class="swatch" style={`background:${ROOM_COLORS[item.type]}`}></span>{item.label}</li>
+		))}
+	</ul>
+</div>
+
+<script>
+	import * as THREE from 'three';
+	import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+	import { floors, GRID_WIDTH, ROOM_HEIGHT, FLOOR_GAP, ROOM_COLORS, type RoomType } from '../data/facilityModel';
+
+	function showFallback(wrap: HTMLElement, message: string) {
+		const fallback = document.createElement('p');
+		fallback.className = 'facility-model-fallback';
+		fallback.textContent = message;
+		wrap.innerHTML = '';
+		wrap.appendChild(fallback);
+	}
+
+	function initFacilityModel(root: Element) {
+		const canvas = root.querySelector('canvas.facility-model-canvas') as HTMLCanvasElement | null;
+		const wrap = root.querySelector('.facility-model-canvas-wrap') as HTMLElement | null;
+		if (!canvas || !wrap) return;
+
+		// Attempt the real renderer up front, in its final config — calling
+		// canvas.getContext() with a *different* config as a separate
+		// feature-detection probe first would bind that context to the
+		// canvas and make this call fail (a canvas can only ever have one
+		// WebGL context attached to it).
+		let renderer: THREE.WebGLRenderer;
+		try {
+			renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+		} catch {
+			showFallback(wrap, "Your browser doesn't support the interactive 3D view — see the room breakdown below.");
+			return;
+		}
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		// ---------- build the room geometry from data/facilityModel.ts ----------
+		const scene = new THREE.Scene();
+		const group = new THREE.Group();
+		scene.add(group);
+
+		const inkEdge = new THREE.LineBasicMaterial({ color: 0x10242b, transparent: true, opacity: 0.35 });
+
+		floors.forEach((floor, floorIndex) => {
+			const y = floorIndex * (ROOM_HEIGHT + FLOOR_GAP);
+			let zCursor = floor.zOffset;
+
+			// thin floor slab under the rooms
+			const floorDepth = floor.bands.reduce((sum, band) => sum + band.depth, 0);
+			const slabGeo = new THREE.BoxGeometry(GRID_WIDTH, 0.15, floorDepth);
+			const slab = new THREE.Mesh(slabGeo, new THREE.MeshStandardMaterial({ color: 0xf4f8f8, roughness: 0.9 }));
+			slab.position.set(GRID_WIDTH / 2, y - 0.075, floor.zOffset + floorDepth / 2);
+			group.add(slab);
+
+			floor.bands.forEach((band) => {
+				let xCursor = 0;
+				const explicitWidth = band.rooms.reduce((sum, r) => sum + (r.width ?? 0), 0);
+				const autoCount = band.rooms.filter((r) => r.width === undefined).length;
+				const autoWidth = autoCount > 0 ? (GRID_WIDTH - explicitWidth) / autoCount : 0;
+
+				band.rooms.forEach((room) => {
+					const w = room.width ?? autoWidth;
+					if (room.type !== 'void') {
+						const boxW = Math.max(w - 0.12, 0.1);
+						const boxD = Math.max(band.depth - 0.12, 0.1);
+						const geo = new THREE.BoxGeometry(boxW, ROOM_HEIGHT, boxD);
+						const color = ROOM_COLORS[room.type as Exclude<RoomType, 'void'>];
+						const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, roughness: 0.85 }));
+						mesh.position.set(xCursor + w / 2, y + ROOM_HEIGHT / 2, zCursor + band.depth / 2);
+						mesh.userData.label = room.label;
+						const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), inkEdge);
+						mesh.add(edges);
+						group.add(mesh);
+					}
+					xCursor += w;
+				});
+				zCursor += band.depth;
+			});
+		});
+
+		// center the building (only — not the ground plane below) at the origin
+		const bounds = new THREE.Box3().setFromObject(group);
+		const center = bounds.getCenter(new THREE.Vector3());
+		group.position.x -= center.x;
+		group.position.z -= center.z;
+
+		// camera fit is computed from the building alone too, so the ground
+		// plane added below doesn't throw off the framing
+		const size = bounds.getSize(new THREE.Vector3());
+		const fitCenter = new THREE.Vector3(0, center.y, 0);
+		const maxDim = Math.max(size.x, size.y, size.z);
+
+		// site/street plane under the ground floor, added after centering/fit
+		const siteGeo = new THREE.PlaneGeometry(GRID_WIDTH + 4, 8);
+		const site = new THREE.Mesh(siteGeo, new THREE.MeshStandardMaterial({ color: 0xe7f1f1, roughness: 1 }));
+		site.rotation.x = -Math.PI / 2;
+		site.position.set(GRID_WIDTH / 2, -0.08, -1.2);
+		group.add(site);
+		const streetGeo = new THREE.PlaneGeometry(GRID_WIDTH + 4, 1.6);
+		const street = new THREE.Mesh(streetGeo, new THREE.MeshStandardMaterial({ color: 0x9fb3b6, roughness: 1 }));
+		street.rotation.x = -Math.PI / 2;
+		street.position.set(GRID_WIDTH / 2, -0.07, -1.6);
+		group.add(street);
+
+		// ---------- lighting ----------
+		scene.add(new THREE.HemisphereLight(0xffffff, 0x223035, 1.2));
+		const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+		sun.position.set(6, 10, 6);
+		scene.add(sun);
+
+		// ---------- camera, auto-framed to the model (renderer created above) ----------
+		const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+
+		const fitDist = (maxDim / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))) * 1.55;
+		const dir = new THREE.Vector3(0.7, 0.62, 0.95).normalize();
+		camera.position.copy(fitCenter).addScaledVector(dir, fitDist);
+		camera.lookAt(fitCenter);
+
+		const controls = new OrbitControls(camera, renderer.domElement);
+		controls.target.copy(fitCenter);
+		controls.enableDamping = true;
+		controls.dampingFactor = 0.08;
+		controls.enablePan = false;
+		controls.minDistance = fitDist * 0.5;
+		controls.maxDistance = fitDist * 1.8;
+		controls.minPolarAngle = 0.2;
+		controls.maxPolarAngle = 1.45;
+		controls.autoRotate = !prefersReducedMotion;
+		controls.autoRotateSpeed = 0.7;
+		controls.update();
+
+		let resumeTimer: ReturnType<typeof setTimeout> | undefined;
+		controls.addEventListener('start', () => {
+			controls.autoRotate = false;
+			if (resumeTimer) clearTimeout(resumeTimer);
+		});
+		controls.addEventListener('end', () => {
+			if (prefersReducedMotion) return;
+			resumeTimer = setTimeout(() => {
+				controls.autoRotate = true;
+			}, 4000);
+		});
+
+		function resize() {
+			const w = wrap!.clientWidth;
+			const h = wrap!.clientHeight;
+			if (w === 0 || h === 0) return;
+			renderer.setSize(w, h, false);
+			camera.aspect = w / h;
+			camera.updateProjectionMatrix();
+		}
+		resize();
+		const resizeObserver = new ResizeObserver(resize);
+		resizeObserver.observe(wrap);
+
+		// only render while the canvas is on screen
+		let rafId: number | null = null;
+		function renderFrame() {
+			controls.update();
+			renderer.render(scene, camera);
+			rafId = requestAnimationFrame(renderFrame);
+		}
+		function start() {
+			if (rafId === null) rafId = requestAnimationFrame(renderFrame);
+		}
+		function stop() {
+			if (rafId !== null) {
+				cancelAnimationFrame(rafId);
+				rafId = null;
+			}
+		}
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) start();
+					else stop();
+				}
+			},
+			{ threshold: 0.01 }
+		);
+		io.observe(canvas);
+	}
+
+	document.querySelectorAll('.facility-model').forEach(initFacilityModel);
+</script>
+
+<style>
+	.facility-model {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+	.facility-model-canvas-wrap {
+		position: relative;
+		aspect-ratio: 4 / 3;
+		border-radius: 16px;
+		overflow: hidden;
+		background: linear-gradient(180deg, var(--tint) 0%, var(--offwhite) 100%);
+		border: 1px solid var(--line);
+	}
+	.facility-model-canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+		cursor: grab;
+		touch-action: none;
+	}
+	.facility-model-canvas:active {
+		cursor: grabbing;
+	}
+	.facility-model-hint {
+		position: absolute;
+		bottom: 14px;
+		right: 16px;
+		margin: 0;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 11px;
+		letter-spacing: 0.04em;
+		color: var(--text-soft);
+		background: rgba(255, 255, 255, 0.72);
+		padding: 4px 10px;
+		border-radius: 20px;
+		pointer-events: none;
+	}
+	.facility-model-fallback {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		margin: 0;
+		padding: 20px;
+		font-size: 13px;
+		color: var(--text-soft);
+		text-align: center;
+	}
+	.facility-model-legend {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		font-size: 13.5px;
+		color: var(--text-soft);
+	}
+	.facility-model-legend li {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.facility-model-legend .swatch {
+		width: 14px;
+		height: 14px;
+		border-radius: 4px;
+		flex-shrink: 0;
+		border: 1px solid rgba(16, 36, 43, 0.15);
+	}
+</style>

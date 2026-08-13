@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import FacilityModel from '../components/FacilityModel.astro';
 ---
 <Layout title="Facility types — VisibleAid" active="types">
 
@@ -13,7 +14,7 @@ import Layout from '../layouts/Layout.astro';
 <section class="block" id="housing">
 	<div class="wrap">
 		<div class="grid2" style="align-items:start;">
-			<div class="ph" style="aspect-ratio:4/3;"><span>facility photo — placeholder</span></div>
+			<FacilityModel />
 			<div>
 				<div class="icon" style="width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:21px; background:rgba(18,163,156,0.14); color:var(--teal-dark);">&#127968;</div>
 				<p class="eyebrow" style="margin-top:14px;">Depth &middot; full-time home</p>
