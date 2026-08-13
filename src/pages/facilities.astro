@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/Layout.astro';
+import facilities from '../data/facilities';
+---
+<Layout title="All facilities — VisibleAid" active="facilities">
+
+<header class="hero" style="padding-bottom:1px;">
+	<div class="wrap" style="padding:44px 0 46px;">
+		<p class="eyebrow">Every facility, in one place</p>
+		<h1 style="font-size:34px;">Where your donation lives</h1>
+		<p class="lede" style="margin-top:14px;">Locations are approximate — district or town level only — to protect residents who have no one else looking out for them.</p>
+	</div>
+</header>
+
+<section class="block">
+	<div class="wrap">
+		<div class="ph mapph"><span>world map with district-level pins — placeholder</span></div>
+
+		<table class="facilities">
+			<thead>
+				<tr><th>Location</th><th>Type</th><th>Residents / households</th><th>Opened</th></tr>
+			</thead>
+			<tbody>
+				{facilities.map((f) => (
+					<tr class="row" onclick={`location.href='/facilities/${f.slug}'`}>
+						<td><a href={`/facilities/${f.slug}`} style="color:inherit; text-decoration:none;">{f.location}</a></td>
+						<td><span class={`pill ${f.type === 'housing' ? 'housing' : ''}`}>{f.typeLabel}</span></td>
+						<td>{f.residentsLabel}</td>
+						<td>{f.opened}</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</div>
+</section>
+
+</Layout>

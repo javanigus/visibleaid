@@ -1,0 +1,51 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description?: string;
+	active?: 'home' | 'types' | 'facilities' | 'monitor';
+}
+
+const {
+	title,
+	description = "VisibleAid funds small, community-run facilities for elderly people living in poverty — and shows donors exactly where the money goes.",
+	active,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="description" content={description} />
+	<title>{title}</title>
+	<link rel="icon" href="/favicon.svg" />
+</head>
+<body>
+
+<nav>
+	<div class="wrap">
+		<a class="wordmark" href="/"><span class="dot"></span>VisibleAid</a>
+		<div class="navlinks">
+			<a href="/" class={active === 'home' ? 'active' : undefined}>Home</a>
+			<a href="/types" class={active === 'types' ? 'active' : undefined}>Facility types</a>
+			<a href="/facilities" class={active === 'facilities' ? 'active' : undefined}>All facilities</a>
+			<a href="/monitor" class={active === 'monitor' ? 'active' : undefined}>Monitor your donations</a>
+			<a href="#" class="nav-cta">Donate</a>
+		</div>
+	</div>
+</nav>
+
+<slot />
+
+<footer>
+	<div class="wrap">
+		<span>VisibleAid. Approximate locations only, to protect residents.</span>
+		<span><a href="/types">Facility types</a> &nbsp;&middot;&nbsp; <a href="/facilities">All facilities</a></span>
+	</div>
+</footer>
+
+</body>
+</html>
