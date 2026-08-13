@@ -1,11 +1,21 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import heroImage from '../assets/hero-bg-image.jpg';
 ---
 <Layout title="VisibleAid — watch your donation build a home" active="home">
 
 <header class="hero">
 	<div class="hero-photo">
-		<span class="phlabel">full-width photo — placeholder</span>
+		<Image
+			src={heroImage}
+			alt=""
+			class="hero-img"
+			widths={[640, 1280, 1920, 2560]}
+			sizes="100vw"
+			loading="eager"
+			fetchpriority="high"
+		/>
 		<div class="hero-scrim"></div>
 		<div class="hero-content">
 			<div class="wrap">
