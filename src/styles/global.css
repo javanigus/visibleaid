@@ -140,9 +140,23 @@ table.facilities tr.row:hover{outline:1.5px solid var(--teal);}
 .progress .ph{height:92px; margin-bottom:8px;}
 .progress .step .l{font-size:12px; color:var(--text-soft);}
 .progress .step.done .l{color:var(--teal-dark); font-weight:600;}
+.progress-thumb{display:block; height:92px; margin-bottom:8px; border-radius:16px; overflow:hidden; cursor:zoom-in;}
+.progress-thumb img{display:block; width:100%; height:100%; object-fit:cover; transition:transform 0.2s ease;}
+.progress-thumb:hover img{transform:scale(1.04);}
 
 .photogrid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:14px 0 44px;}
 .photogrid .ph{aspect-ratio:1;}
+.photogrid-thumb{display:block; aspect-ratio:1; border-radius:16px; overflow:hidden; cursor:zoom-in;}
+.photogrid-thumb img{display:block; width:100%; height:100%; object-fit:cover; transition:transform 0.2s ease;}
+.photogrid-thumb:hover img{transform:scale(1.04);}
+
+/* ---------- CSS-only lightbox (no JS) ---------- */
+.lightbox-overlay{display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:32px;}
+.lightbox-overlay:target{display:flex;}
+.lightbox-backdrop{position:absolute; inset:0; background:rgba(11,23,28,0.9); cursor:zoom-out;}
+.lightbox-figure{position:relative; z-index:1; margin:0; max-width:min(92vw, 1100px); max-height:92vh;}
+.lightbox-figure img{display:block; width:100%; height:auto; max-height:92vh; object-fit:contain; border-radius:12px;}
+.lightbox-close{position:absolute; top:-14px; right:-14px; width:36px; height:36px; border-radius:50%; background:#fff; color:var(--ink); display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:20px; line-height:1; box-shadow:0 4px 14px rgba(11,23,28,0.35);}
 
 .donorwall{display:flex; flex-wrap:wrap; gap:8px;}
 .chip{font-size:13px; padding:8px 15px; border-radius:20px; background:#fff; border:1px solid var(--line);}
@@ -165,6 +179,18 @@ table.facilities tr.row:hover{outline:1.5px solid var(--teal);}
 .compare tbody td.us{background:rgba(18,163,156,0.06); color:var(--text); font-weight:500;}
 .compare .x{color:#B0453B; margin-right:6px;}
 .compare .ok{color:var(--teal-dark); margin-right:6px;}
+
+/* ---------- interactive 3D facility diagrams ---------- */
+/* Shared between components/FacilityModel.astro and WashFacilityModel.astro. */
+.facility-model{display:flex; flex-direction:column; gap:14px;}
+.facility-model-canvas-wrap{position:relative; aspect-ratio:4/3; border-radius:16px; overflow:hidden; background:linear-gradient(180deg, var(--tint) 0%, var(--offwhite) 100%); border:1px solid var(--line);}
+.facility-model-canvas{width:100%; height:100%; display:block; cursor:grab; touch-action:none;}
+.facility-model-canvas:active{cursor:grabbing;}
+.facility-model-hint{position:absolute; bottom:14px; right:16px; margin:0; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.04em; color:var(--text-soft); background:rgba(255,255,255,0.72); padding:4px 10px; border-radius:20px; pointer-events:none;}
+.facility-model-fallback{display:flex; align-items:center; justify-content:center; height:100%; margin:0; padding:20px; font-size:13px; color:var(--text-soft); text-align:center;}
+.facility-model-legend{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; font-size:13.5px; color:var(--text-soft);}
+.facility-model-legend li{display:flex; align-items:center; gap:10px;}
+.facility-model-legend .swatch{width:14px; height:14px; border-radius:4px; flex-shrink:0; border:1px solid rgba(16,36,43,0.15);}
 
 @media (max-width:760px){
   .grid2, .statgrid{grid-template-columns:1fr;}

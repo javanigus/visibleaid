@@ -1,35 +1,19 @@
-// Data model for the interactive 3D "dollhouse" diagram on /types.
+// Room-layout data for the Shared Housing 3D diagram (see
+// components/FacilityModel.astro and lib/buildingModel.ts).
 // This is a schematic massing model, not an architectural drawing — the
 // goal is to make the room count/layout legible at a glance, not to be
-// dimensionally accurate. Edit the bands below to change the room mix;
-// the 3D layout, camera framing, and legend are all derived from this data.
+// dimensionally accurate. Edit the bands below to change the room mix.
+//
+// Deliberately a simple rectangle, same footprint on both floors — land
+// costs money, and this is a facility for people with nowhere else to go,
+// so functionality wins over architectural flourish. No separate living
+// room: residents can gather in the restaurant instead.
+//
+// Ground floor: restaurant (open to the street), kitchen, some bedrooms,
+// and bathrooms shared by both restaurant customers and residents.
+// Upper floor: the rest of the bedrooms, plus bathrooms for residents only.
 
-export type RoomType = 'restaurant' | 'kitchen' | 'bedroom' | 'bathroom' | 'void';
-
-export interface RoomSpec {
-	type: RoomType;
-	label: string;
-	/** Width in grid units. Omit to split the band's remaining width evenly among siblings that also omit it. */
-	width?: number;
-}
-
-/** A left-to-right strip of rooms, `depth` grid units front-to-back. */
-export interface Band {
-	depth: number;
-	rooms: RoomSpec[];
-}
-
-export interface FloorSpec {
-	label: string;
-	bands: Band[];
-	/** Front-to-back offset (grid units) from the ground floor's front edge — lets an upper floor sit above only part of the footprint below it. */
-	zOffset: number;
-}
-
-export const GRID_WIDTH = 10;
-export const ROOM_HEIGHT = 1.4;
-/** Vertical gap between floors in the exploded view. */
-export const FLOOR_GAP = 1.3;
+import type { FloorSpec } from '../lib/buildingModel';
 
 export const floors: FloorSpec[] = [
 	{
@@ -52,60 +36,65 @@ export const floors: FloorSpec[] = [
 					{ type: 'bedroom', label: 'Ground-floor bedroom 2' },
 					{ type: 'bedroom', label: 'Ground-floor bedroom 3' },
 					{ type: 'bedroom', label: 'Ground-floor bedroom 4' },
-					{ type: 'bedroom', label: 'Ground-floor bedroom 5' },
 				],
 			},
 			{
 				depth: 2,
 				rooms: [
-					{ type: 'bedroom', label: 'Ground-floor bedroom 6' },
-					{ type: 'bedroom', label: 'Ground-floor bedroom 7' },
-					{ type: 'bathroom', label: 'Ground-floor bathroom 1' },
-					{ type: 'bathroom', label: 'Ground-floor bathroom 2' },
-					{ type: 'bathroom', label: 'Ground-floor bathroom 3' },
+					{ type: 'bathroom', label: 'Ground-floor bathroom 1 (shared with restaurant customers)' },
+					{ type: 'bathroom', label: 'Ground-floor bathroom 2 (shared with restaurant customers)' },
+					{ type: 'bathroom', label: 'Ground-floor bathroom 3 (shared with restaurant customers)' },
 				],
 			},
 		],
 	},
 	{
 		label: 'Upper floor',
-		// Sits above the ground floor's bedroom wing only — the restaurant
-		// and kitchen are single-storey, open to the sky above them.
-		zOffset: 3.2,
+		// Same footprint as the ground floor (simple rectangle) — no
+		// restaurant/kitchen up here, so the whole depth is bedrooms + baths.
+		zOffset: 0,
 		bands: [
 			{
-				depth: 2,
+				depth: 2.4,
 				rooms: [
 					{ type: 'bedroom', label: 'Upper-floor bedroom 1' },
 					{ type: 'bedroom', label: 'Upper-floor bedroom 2' },
 					{ type: 'bedroom', label: 'Upper-floor bedroom 3' },
 					{ type: 'bedroom', label: 'Upper-floor bedroom 4' },
-					{ type: 'bedroom', label: 'Upper-floor bedroom 5' },
 				],
 			},
 			{
-				depth: 2,
+				depth: 2.4,
 				rooms: [
-					{ type: 'bedroom', label: 'Upper-floor bedroom 6', width: 2.5 },
-					{ type: 'bedroom', label: 'Upper-floor bedroom 7', width: 2.5 },
-					{ type: 'bathroom', label: 'Upper-floor bathroom 1', width: 2.5 },
-					{ type: 'bathroom', label: 'Upper-floor bathroom 2', width: 2.5 },
+					{ type: 'bedroom', label: 'Upper-floor bedroom 5' },
+					{ type: 'bedroom', label: 'Upper-floor bedroom 6' },
+					{ type: 'bedroom', label: 'Upper-floor bedroom 7' },
+					{ type: 'bedroom', label: 'Upper-floor bedroom 8' },
+				],
+			},
+			{
+				depth: 2.4,
+				rooms: [
+					{ type: 'bedroom', label: 'Upper-floor bedroom 9' },
+					{ type: 'bedroom', label: 'Upper-floor bedroom 10' },
+					{ type: 'bathroom', label: 'Upper-floor bathroom 1' },
+					{ type: 'bathroom', label: 'Upper-floor bathroom 2' },
 				],
 			},
 		],
 	},
 ];
 
-export const ROOM_COLORS: Record<Exclude<RoomType, 'void'>, string> = {
+export const ROOM_COLORS: Record<string, string> = {
 	restaurant: '#12A39C',
 	kitchen: '#0C7F79',
 	bedroom: '#C7DEDC',
 	bathroom: '#3E6270',
 };
 
-export const ROOM_LEGEND: { type: Exclude<RoomType, 'void'>; label: string }[] = [
+export const ROOM_LEGEND: { type: string; label: string }[] = [
 	{ type: 'restaurant', label: 'Restaurant, open to the street' },
 	{ type: 'kitchen', label: 'Kitchen' },
-	{ type: 'bedroom', label: 'Bedroom — 7 ground floor, 7 upstairs (14 total, one per resident)' },
-	{ type: 'bathroom', label: 'Shared bathroom — 3 ground floor, 2 upstairs (5 total)' },
+	{ type: 'bedroom', label: 'Bedroom — 4 ground floor, 10 upstairs (14 total, one per resident)' },
+	{ type: 'bathroom', label: 'Shared bathroom — 3 ground floor (also used by restaurant customers), 2 upstairs (5 total)' },
 ];

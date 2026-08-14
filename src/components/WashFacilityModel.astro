@@ -1,12 +1,12 @@
 ---
-import { ROOM_LEGEND, ROOM_COLORS } from '../data/facilityModel';
+import { ROOM_LEGEND, ROOM_COLORS } from '../data/washFacilityModel';
 ---
-<div class="facility-model" data-model="housing">
+<div class="facility-model" data-model="wash">
 	<div class="facility-model-canvas-wrap">
 		<canvas
 			class="facility-model-canvas"
 			role="img"
-			aria-label="Interactive 3D model of a two-story shared housing facility, a simple rectangle exploded to show both floors. Ground floor: restaurant open to the street, kitchen, 4 bedrooms, 3 bathrooms shared with restaurant customers. Upper floor: 10 bedrooms, 2 bathrooms. Drag to rotate."
+			aria-label="Interactive 3D model of a shared kitchen and bath facility. Five open kitchens face the front of the building; five bathrooms directly behind them share the back wall, with doors facing the rear, opposite the kitchens. Drag to rotate."
 		></canvas>
 		<p class="facility-model-hint">Drag to rotate</p>
 		<noscript><p class="facility-model-fallback">Interactive model requires JavaScript — see the room breakdown below.</p></noscript>
@@ -21,7 +21,7 @@ import { ROOM_LEGEND, ROOM_COLORS } from '../data/facilityModel';
 <script>
 	import * as THREE from 'three';
 	import { buildFloorsGroup, mountInteractiveModel, GRID_WIDTH } from '../lib/buildingModel';
-	import { floors, ROOM_COLORS } from '../data/facilityModel';
+	import { floors, ROOM_COLORS } from '../data/washFacilityModel';
 
 	function showFallback(wrap: HTMLElement, message: string) {
 		const fallback = document.createElement('p');
@@ -31,7 +31,7 @@ import { ROOM_LEGEND, ROOM_COLORS } from '../data/facilityModel';
 		wrap.appendChild(fallback);
 	}
 
-	function initFacilityModel(root: Element) {
+	function initModel(root: Element) {
 		const canvas = root.querySelector('canvas.facility-model-canvas') as HTMLCanvasElement | null;
 		const wrap = root.querySelector('.facility-model-canvas-wrap') as HTMLElement | null;
 		if (!canvas || !wrap) return;
@@ -42,23 +42,18 @@ import { ROOM_LEGEND, ROOM_COLORS } from '../data/facilityModel';
 			canvas,
 			wrap,
 			group,
-			addExtras: (group) => {
-				// site/street plane under the ground floor
-				const siteGeo = new THREE.PlaneGeometry(GRID_WIDTH + 4, 8);
-				const site = new THREE.Mesh(siteGeo, new THREE.MeshStandardMaterial({ color: 0xe7f1f1, roughness: 1 }));
-				site.rotation.x = -Math.PI / 2;
-				site.position.set(GRID_WIDTH / 2, -0.08, -1.2);
-				group.add(site);
-				const streetGeo = new THREE.PlaneGeometry(GRID_WIDTH + 4, 1.6);
-				const street = new THREE.Mesh(streetGeo, new THREE.MeshStandardMaterial({ color: 0x9fb3b6, roughness: 1 }));
-				street.rotation.x = -Math.PI / 2;
-				street.position.set(GRID_WIDTH / 2, -0.07, -1.6);
-				group.add(street);
+			addExtras: (group, fit) => {
+				// plain ground plane, generously sized around the building
+				const groundGeo = new THREE.PlaneGeometry(GRID_WIDTH + 4, fit.size.z + 4);
+				const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ color: 0xe7f1f1, roughness: 1 }));
+				ground.rotation.x = -Math.PI / 2;
+				ground.position.set(GRID_WIDTH / 2, -0.08, 0);
+				group.add(ground);
 			},
 		});
 
 		if (!ok) showFallback(wrap, "Your browser doesn't support the interactive 3D view — see the room breakdown below.");
 	}
 
-	document.querySelectorAll('[data-model="housing"]').forEach(initFacilityModel);
+	document.querySelectorAll('[data-model="wash"]').forEach(initModel);
 </script>

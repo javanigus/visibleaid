@@ -1,6 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { Image } from 'astro:assets';
 import facilities, { type Facility } from '../../data/facilities';
+import sharedHousingPhotos from '../../data/sharedHousingPhotos';
+import sharedHousingConstructionPhotos from '../../data/sharedHousingConstructionPhotos';
 
 export function getStaticPaths() {
 	return facilities.map((f) => ({
@@ -39,21 +42,60 @@ const { facility } = Astro.props;
 			<p>Quarterly build photos, oldest to newest — see this facility go from bare land to opening.</p>
 		</div>
 		<div class="progress">
-			{facility.progressSteps.map((step) => (
-				<div class="step done"><div class="ph"><span>photo</span></div><div class="l">{step}</div></div>
+			{facility.progressSteps.map((step, i) => (
+				facility.type === 'housing' && sharedHousingConstructionPhotos[i] ? (
+					<div class="step done">
+						<a href={`#progress-${i}`} class="progress-thumb" aria-label={`View larger: ${sharedHousingConstructionPhotos[i].alt}`}>
+							<Image src={sharedHousingConstructionPhotos[i].src} alt={sharedHousingConstructionPhotos[i].alt} widths={[260, 520]} sizes="(min-width: 760px) 230px, 45vw" />
+						</a>
+						<div class="l">{step}</div>
+					</div>
+				) : (
+					<div class="step done"><div class="ph"><span>photo</span></div><div class="l">{step}</div></div>
+				)
 			))}
 		</div>
+
+		{facility.type === 'housing' && sharedHousingConstructionPhotos.map((photo, i) => (
+			<div class="lightbox-overlay" id={`progress-${i}`} role="dialog" aria-modal="true" aria-label={photo.alt}>
+				<a href="#_" class="lightbox-backdrop" aria-label="Close"></a>
+				<figure class="lightbox-figure">
+					<Image src={photo.src} alt={photo.alt} widths={[800, 1600]} sizes="90vw" />
+					<a href="#_" class="lightbox-close" aria-label="Close">&times;</a>
+				</figure>
+			</div>
+		))}
 
 		<div class="section-head" style="margin-top:48px;">
 			<h2 style="font-size:21px;">Latest quarterly photos</h2>
 			<p>Faces shown only where a resident has opted in.</p>
 		</div>
 		<div class="photogrid">
-			<div class="ph"><span>photo</span></div>
-			<div class="ph"><span>photo</span></div>
-			<div class="ph"><span>photo</span></div>
-			<div class="ph"><span>photo</span></div>
+			{facility.type === 'housing' ? (
+				sharedHousingPhotos.map((photo, i) => (
+					<a href={`#photo-${i}`} class="photogrid-thumb" aria-label={`View larger: ${photo.alt}`}>
+						<Image src={photo.src} alt={photo.alt} widths={[300, 600]} sizes="(min-width: 760px) 230px, 45vw" />
+					</a>
+				))
+			) : (
+				<Fragment>
+					<div class="ph"><span>photo</span></div>
+					<div class="ph"><span>photo</span></div>
+					<div class="ph"><span>photo</span></div>
+					<div class="ph"><span>photo</span></div>
+				</Fragment>
+			)}
 		</div>
+
+		{facility.type === 'housing' && sharedHousingPhotos.map((photo, i) => (
+			<div class="lightbox-overlay" id={`photo-${i}`} role="dialog" aria-modal="true" aria-label={photo.alt}>
+				<a href="#_" class="lightbox-backdrop" aria-label="Close"></a>
+				<figure class="lightbox-figure">
+					<Image src={photo.src} alt={photo.alt} widths={[800, 1600]} sizes="90vw" />
+					<a href="#_" class="lightbox-close" aria-label="Close">&times;</a>
+				</figure>
+			</div>
+		))}
 
 		<div class="section-head">
 			<h2 style="font-size:21px;">Donor wall</h2>
