@@ -5,6 +5,7 @@ import facilities, { type Facility } from '../../data/facilities';
 import sharedHousingPhotos from '../../data/sharedHousingPhotos';
 import sharedHousingConstructionPhotos from '../../data/sharedHousingConstructionPhotos';
 import sharedWashPhotos from '../../data/sharedWashPhotos';
+import sharedWashConstructionPhotos from '../../data/sharedWashConstructionPhotos';
 
 export function getStaticPaths() {
 	return facilities.map((f) => ({
@@ -19,6 +20,7 @@ interface Props {
 
 const { facility } = Astro.props;
 const examplePhotos = facility.type === 'housing' ? sharedHousingPhotos : facility.type === 'wash' ? sharedWashPhotos : [];
+const constructionPhotos = facility.type === 'housing' ? sharedHousingConstructionPhotos : facility.type === 'wash' ? sharedWashConstructionPhotos : [];
 ---
 <Layout title={`${facility.location} — VisibleAid`} active="facilities">
 
@@ -45,10 +47,10 @@ const examplePhotos = facility.type === 'housing' ? sharedHousingPhotos : facili
 		</div>
 		<div class="progress">
 			{facility.progressSteps.map((step, i) => (
-				facility.type === 'housing' && sharedHousingConstructionPhotos[i] ? (
+				constructionPhotos[i] ? (
 					<div class="step done">
-						<a href={`#progress-${i}`} class="progress-thumb" aria-label={`View larger: ${sharedHousingConstructionPhotos[i].alt}`}>
-							<Image src={sharedHousingConstructionPhotos[i].src} alt={sharedHousingConstructionPhotos[i].alt} widths={[260, 520]} sizes="(min-width: 760px) 230px, 45vw" />
+						<a href={`#progress-${i}`} class="progress-thumb" aria-label={`View larger: ${constructionPhotos[i].alt}`}>
+							<Image src={constructionPhotos[i].src} alt={constructionPhotos[i].alt} widths={[260, 520]} sizes="(min-width: 760px) 230px, 45vw" />
 						</a>
 						<div class="l">{step}</div>
 					</div>
@@ -58,7 +60,7 @@ const examplePhotos = facility.type === 'housing' ? sharedHousingPhotos : facili
 			))}
 		</div>
 
-		{facility.type === 'housing' && sharedHousingConstructionPhotos.map((photo, i) => (
+		{constructionPhotos.map((photo, i) => (
 			<div class="lightbox-overlay" id={`progress-${i}`} role="dialog" aria-modal="true" aria-label={photo.alt}>
 				<a href="#_" class="lightbox-backdrop" aria-label="Close"></a>
 				<figure class="lightbox-figure">
