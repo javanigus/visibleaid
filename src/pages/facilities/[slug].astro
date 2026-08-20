@@ -4,6 +4,7 @@ import { Image } from 'astro:assets';
 import facilities, { type Facility } from '../../data/facilities';
 import sharedHousingPhotos from '../../data/sharedHousingPhotos';
 import sharedHousingConstructionPhotos from '../../data/sharedHousingConstructionPhotos';
+import sharedWashPhotos from '../../data/sharedWashPhotos';
 
 export function getStaticPaths() {
 	return facilities.map((f) => ({
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const { facility } = Astro.props;
+const examplePhotos = facility.type === 'housing' ? sharedHousingPhotos : facility.type === 'wash' ? sharedWashPhotos : [];
 ---
 <Layout title={`${facility.location} — VisibleAid`} active="facilities">
 
@@ -71,23 +73,18 @@ const { facility } = Astro.props;
 			<p>Faces shown only where a resident has opted in.</p>
 		</div>
 		<div class="photogrid">
-			{facility.type === 'housing' ? (
-				sharedHousingPhotos.map((photo, i) => (
-					<a href={`#photo-${i}`} class="photogrid-thumb" aria-label={`View larger: ${photo.alt}`}>
-						<Image src={photo.src} alt={photo.alt} widths={[300, 600]} sizes="(min-width: 760px) 230px, 45vw" />
+			{Array.from({ length: 4 }).map((_, i) => (
+				examplePhotos[i] ? (
+					<a href={`#photo-${i}`} class="photogrid-thumb" aria-label={`View larger: ${examplePhotos[i].alt}`}>
+						<Image src={examplePhotos[i].src} alt={examplePhotos[i].alt} widths={[300, 600]} sizes="(min-width: 760px) 230px, 45vw" />
 					</a>
-				))
-			) : (
-				<Fragment>
+				) : (
 					<div class="ph"><span>photo</span></div>
-					<div class="ph"><span>photo</span></div>
-					<div class="ph"><span>photo</span></div>
-					<div class="ph"><span>photo</span></div>
-				</Fragment>
-			)}
+				)
+			))}
 		</div>
 
-		{facility.type === 'housing' && sharedHousingPhotos.map((photo, i) => (
+		{examplePhotos.map((photo, i) => (
 			<div class="lightbox-overlay" id={`photo-${i}`} role="dialog" aria-modal="true" aria-label={photo.alt}>
 				<a href="#_" class="lightbox-backdrop" aria-label="Close"></a>
 				<figure class="lightbox-figure">
