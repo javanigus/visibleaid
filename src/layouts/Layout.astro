@@ -28,15 +28,41 @@ const {
 <nav>
 	<div class="wrap">
 		<a class="wordmark" href="/"><span class="dot"></span>VisibleAid</a>
-		<div class="navlinks">
-			<a href="/" class={active === 'home' ? 'active' : undefined}>Home</a>
-			<a href="/types" class={active === 'types' ? 'active' : undefined}>Facility types</a>
-			<a href="/facilities" class={active === 'facilities' ? 'active' : undefined}>All facilities</a>
-			<a href="/monitor" class={active === 'monitor' ? 'active' : undefined}>Monitor your donations</a>
+		<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navlinks" aria-label="Open menu">
+			<span class="bar"></span><span class="bar"></span><span class="bar"></span>
+		</button>
+		<div class="navlinks" id="navlinks">
+			<a href="/" class={active === 'home' ? 'active' : undefined} aria-current={active === 'home' ? 'page' : undefined}>Home</a>
+			<a href="/types" class={active === 'types' ? 'active' : undefined} aria-current={active === 'types' ? 'page' : undefined}>Facility types</a>
+			<a href="/facilities" class={active === 'facilities' ? 'active' : undefined} aria-current={active === 'facilities' ? 'page' : undefined}>All facilities</a>
+			<a href="/monitor" class={active === 'monitor' ? 'active' : undefined} aria-current={active === 'monitor' ? 'page' : undefined}>Monitor your donations</a>
 			<a href="#" class="nav-cta">Donate</a>
 		</div>
 	</div>
 </nav>
+
+<script>
+	const nav = document.querySelector('nav');
+	const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle');
+	if (nav && toggle) {
+		const setOpen = (open: boolean) => {
+			nav.classList.toggle('open', open);
+			toggle.setAttribute('aria-expanded', String(open));
+			toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+		};
+		toggle.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
+		nav.querySelectorAll('.navlinks a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && nav.classList.contains('open')) {
+				setOpen(false);
+				toggle.focus();
+			}
+		});
+		document.addEventListener('click', (e) => {
+			if (nav.classList.contains('open') && !nav.contains(e.target as Node)) setOpen(false);
+		});
+	}
+</script>
 
 <slot />
 
